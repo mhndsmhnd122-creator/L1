@@ -7,37 +7,46 @@
         body { background: #121212; color: #FFF; font-family: Tahoma, sans-serif; text-align: center; padding: 20px; }
         input, button { padding: 10px; margin: 10px; width: 300px; border-radius: 5px; border: none; }
         input { background: #222; color: #FFF; border: 1px solid #444; }
-        button { background: #00FF7F; color: #000; font-weight: bold; cursor: pointer; }
+        .btn-start { background: #00FF7F; color: #000; font-weight: bold; cursor: pointer; }
+        .btn-stop { background: #FF4444; color: #fff; font-weight: bold; cursor: pointer; }
         code { background: #333; padding: 10px; display: block; margin: 20px auto; width: 80%; word-break: break-all; text-align: left; }
     </style>
 </head>
 <body>
     <h2>لوحة تحكم وتوجيه البث</h2>
-    <p>ادخل بيانات قناتك لبدء البث عبر سيرفرات GitHub تلقائياً</p>
-    
-    <input type="text" id="kickUser" placeholder="اسم قناة كيك (مثال: OSAMAH)"><br>
+    <input type="password" id="ghToken" placeholder="أدخل GitHub Personal Access Token"><br>
+    <input type="text" id="kickUser" placeholder="اسم قناة كيك"><br>
     <input type="text" id="streamKey" placeholder="رابط ومفتاح الريستريم أو يوتيوب"><br>
-    <button onclick="triggerStream()">ابدأ البث الآن</button>
-
-    <h3>مخرجات البث (Logs):</h3>
-    <code id="output">جاهز لتشغيل البث...</code>
-
+    <button class="btn-start" onclick="startWorkflow()">تشغيل البث</button>
+    <button class="btn-stop" onclick="stopWorkflow()">إيقاف البث</button>
+    <h3>المخرجات:</h3>
+    <code id="output">جاهز...</code>
     <script>
-        async function triggerStream() {
+        const owner = "mhndsmhnd122-creator";
+        const repo = "L1";
+        const workflowFile = "stream.yml";
+        async function startWorkflow() {
+            const token = document.getElementById('ghToken').value;
             const user = document.getElementById('kickUser').value;
             const key = document.getElementById('streamKey').value;
             const output = document.getElementById('output');
-
-            if (!user || !key) {
-                alert('الرجاء تعبئة جميع الحقول!');
-                return;
-            }
-
-            output.innerText = "جاري إرسال طلب تشغيل البث إلى السيرفر...";
-
-            // ملاحظة: لتشغيل هذه الخطوة أوتوماتيكياً من الواجهة، ستحتاج توكن GitHub (Personal Access Token) مع صلاحية repo
-            // يمكنك وضعه هنا أو تشغيله مباشرة من تبويب Actions في المستودع.
-            alert("تم إعداد الكود بنجاح. لتشغيل البث مباشرة، توجه إلى تبويب Actions في مستودعك واضغط Run workflow بالبيانات التي أدخلتها.");
+            output.innerText = "جاري التشغيل...";
+            const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/actions/workflows/${workflowFile}/dispatches`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ref: 'main', inputs: { kick_user: user, stream_key: key } })
+            });
+            output.innerText = res.ok ? "تم إرسال أمر التشغيل!" : "خطأ، تأكد من التوكن";
+        }
+        async function stopWorkflow() {
+            const token = document.getElementById('ghToken').value;
+            const output = document.getElementById('output');
+            const runsRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/actions/runs?status=in_progress`, { headers: { 'Authorization': `Bearer ${token}` } });
+            const data = await runsRes.json();
+            if (data.workflow_runs.length > 0) {
+                await fetch(`https://api.github.com/repos/${owner}/${repo}/actions/runs/${data.workflow_runs[0].id}/cancel`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } });
+                output.innerText = "تم إيقاف البث.";
+            } else { output.innerText = "لا يوجد بث يعمل حالياً."; }
         }
     </script>
 </body>
