@@ -2,52 +2,320 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>لوحة تحكم بثوث Kick</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم البث الاحترافية</title>
     <style>
-        body { background: #121212; color: #FFF; font-family: Tahoma, sans-serif; text-align: center; padding: 20px; }
-        input, button { padding: 10px; margin: 10px; width: 300px; border-radius: 5px; border: none; }
-        input { background: #222; color: #FFF; border: 1px solid #444; }
-        .btn-start { background: #00FF7F; color: #000; font-weight: bold; cursor: pointer; }
-        .btn-stop { background: #FF4444; color: #fff; font-weight: bold; cursor: pointer; }
-        code { background: #333; padding: 10px; display: block; margin: 20px auto; width: 80%; word-break: break-all; text-align: left; }
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --input-bg: #2a2a2a;
+            --border-color: #444;
+            --accent-green: #00e676;
+            --accent-red: #ff5252;
+            --accent-blue: #29b6f6;
+            --text-color: #fff;
+            --text-dim: #bbb;
+        }
+        body {
+            font-family: Tahoma, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 420px;
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+            box-sizing: border-box;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+        h2 { font-size: 17px; margin: 0; }
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            background: #2c2c2c;
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+        .dot {
+            width: 8px;
+            height: 8px;
+            background-color: #777;
+            border-radius: 50%;
+        }
+        .dot.live {
+            background-color: var(--accent-green);
+            box-shadow: 0 0 8px var(--accent-green);
+            animation: pulse 1.5p infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.4; }
+            100% { opacity: 1; }
+        }
+        label { font-size: 12px; color: var(--text-dim); display: block; margin-bottom: 5px; }
+        .input-group { margin-bottom: 12px; }
+        input {
+            width: 100%;
+            padding: 10px;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 13px;
+        }
+        input:focus { border-color: var(--accent-blue); outline: none; }
+        .row-flex { display: flex; gap: 8px; margin-bottom: 12px; }
+        button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+            transition: opacity 0.2s;
+        }
+        button:active { opacity: 0.8; }
+        .btn-start { background-color: var(--accent-green); color: #000; margin-bottom: 8px; }
+        .btn-stop { background-color: var(--accent-red); color: #fff; margin-bottom: 12px; }
+        .btn-secondary { background-color: #333; color: var(--text-color); font-size: 12px; padding: 8px; }
+        
+        .timer-box {
+            text-align: center;
+            font-size: 14px;
+            background: var(--input-bg);
+            padding: 8px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            color: var(--accent-green);
+            font-family: monospace;
+        }
+        
+        #output {
+            background: #111;
+            padding: 12px;
+            border-radius: 6px;
+            min-height: 50px;
+            max-height: 120px;
+            overflow-y: auto;
+            font-size: 11px;
+            color: #00e676;
+            font-family: monospace;
+            word-break: break-all;
+            border: 1px solid #222;
+        }
+        .output-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: var(--text-dim);
+            margin-bottom: 5px;
+        }
+        .clear-btn { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 11px; padding: 0; width: auto; }
+        .links-row { display: flex; gap: 8px; margin-top: 15px; }
     </style>
 </head>
 <body>
-    <h2>لوحة تحكم وتوجيه البث</h2>
-    <input type="password" id="ghToken" placeholder="أدخل GitHub Personal Access Token"><br>
-    <input type="text" id="kickUser" placeholder="اسم قناة كيك"><br>
-    <input type="text" id="streamKey" placeholder="رابط ومفتاح الريستريم أو يوتيوب"><br>
-    <button class="btn-start" onclick="startWorkflow()">تشغيل البث</button>
-    <button class="btn-stop" onclick="stopWorkflow()">إيقاف البث</button>
-    <h3>المخرجات:</h3>
-    <code id="output">جاهز...</code>
-    <script>
-        const owner = "mhndsmhnd122-creator";
-        const repo = "L1";
-        const workflowFile = "stream.yml";
-        async function startWorkflow() {
-            const token = document.getElementById('ghToken').value;
-            const user = document.getElementById('kickUser').value;
-            const key = document.getElementById('streamKey').value;
-            const output = document.getElementById('output');
-            output.innerText = "جاري التشغيل...";
-            const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/actions/workflows/${workflowFile}/dispatches`, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ref: 'main', inputs: { kick_user: user, stream_key: key } })
-            });
-            output.innerText = res.ok ? "تم إرسال أمر التشغيل!" : "خطأ، تأكد من التوكن";
+
+<div class="container">
+    <div class="header">
+        <h2>لوحة تحكم البث</h2>
+        <div class="status-badge">
+            <div id="statusDot" class="dot"></div>
+            <span id="statusText">متوقف</span>
+        </div>
+    </div>
+
+    <div class="input-group">
+        <label>GitHub Personal Access Token</label>
+        <div class="row-flex">
+            <input type="password" id="token" placeholder="ghp_xxxxxxxxxxxx">
+            <button class="btn-secondary" style="width: 80px;" onclick="saveToken()">حفظ</button>
+        </div>
+    </div>
+
+    <div class="input-group">
+        <label>اسم قناة كيك (Kick)</label>
+        <input type="text" id="channel" placeholder="مثال: OSAMAH">
+    </div>
+
+    <div class="input-group">
+        <label>رابط ومفتاح الريستريم / يوتيوب</label>
+        <input type="text" id="streamUrl" placeholder="rtmp://a.rtmp.youtube.com/live2/xxxx">
+    </div>
+
+    <div id="timerDisplay" class="timer-box" style="display: none;">
+        ⏱️ وقت البث: <span id="timeCounter">00:00:00</span>
+    </div>
+
+    <button class="btn-start" onclick="startStream()">تشغيل البث 🚀</button>
+    <button class="btn-stop" onclick="stopStream()">إيقاف البث 🛑</button>
+
+    <div class="output-header">
+        <span>سجل المخرجات:</span>
+        <button class="clear-btn" onclick="clearLog()">مسح السجل</button>
+    </div>
+    <div id="output">جاهز للتحكم بالنظام...</div>
+
+    <div class="links-row">
+        <button class="btn-secondary" onclick="window.open('https://github.com/mhndsmhnd122-creator/L1/actions', '_blank')">سجلات GitHub</button>
+        <button class="btn-secondary" onclick="window.open('https://studio.youtube.com', '_blank')">استوديو يوتيوب</button>
+    </div>
+</div>
+
+<script>
+    const repoOwner = "mhndsmhnd122-creator";
+    const repoName = "L1";
+    let timerInterval = null;
+    let secondsElapsed = 0;
+
+    // استرجاع التوكن المحفوظ مسبقاً تلقائياً
+    window.onload = function() {
+        const savedToken = localStorage.getItem('gh_token');
+        if(savedToken) {
+            document.getElementById('token').value = savedToken;
         }
-        async function stopWorkflow() {
-            const token = document.getElementById('ghToken').value;
-            const output = document.getElementById('output');
-            const runsRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/actions/runs?status=in_progress`, { headers: { 'Authorization': `Bearer ${token}` } });
-            const data = await runsRes.json();
-            if (data.workflow_runs.length > 0) {
-                await fetch(`https://api.github.com/repos/${owner}/${repo}/actions/runs/${data.workflow_runs[0].id}/cancel`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } });
-                output.innerText = "تم إيقاف البث.";
-            } else { output.innerText = "لا يوجد بث يعمل حالياً."; }
+    }
+
+    function saveToken() {
+        const token = document.getElementById('token').value;
+        if(token) {
+            localStorage.setItem('gh_token', token);
+            log("تم حفظ التوكن في المتصفح بنجاح ✅");
+        } else {
+            alert("الرجاء إدخال التوكن أولاً!");
         }
-    </script>
+    }
+
+    function log(msg) {
+        const out = document.getElementById('output');
+        out.innerText += "\n> " + msg;
+        out.scrollTop = out.scrollHeight;
+    }
+
+    function clearLog() {
+        document.getElementById('output').innerText = "تم مسح السجل.";
+    }
+
+    function setLiveStatus(isLive) {
+        const dot = document.getElementById('statusDot');
+        const text = document.getElementById('statusText');
+        const timerBox = document.getElementById('timerDisplay');
+
+        if(isLive) {
+            dot.classList.add('live');
+            text.innerText = "البث شغال";
+            timerBox.style.display = "block";
+            startTimer();
+        } else {
+            dot.classList.remove('live');
+            text.innerText = "متوقف";
+            timerBox.style.display = "none";
+            stopTimer();
+        }
+    }
+
+    function startTimer() {
+        if(timerInterval) clearInterval(timerInterval);
+        secondsElapsed = 0;
+        timerInterval = setInterval(() => {
+            secondsElapsed++;
+            let hrs = Math.floor(secondsElapsed / 3600).toString().padStart(2, '0');
+            let mins = Math.floor((secondsElapsed % 3600) / 60).toString().padStart(2, '0');
+            let secs = (secondsElapsed % 60).toString().padStart(2, '0');
+            document.getElementById('timeCounter').innerText = `${hrs}:${mins}:${secs}`;
+        }, 1000);
+    }
+
+    function stopTimer() {
+        if(timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+    }
+
+    async function startStream() {
+        const token = document.getElementById('token').value;
+        const channel = document.getElementById('channel').value;
+        const streamUrl = document.getElementById('streamUrl').value;
+
+        if(!token || !channel || !streamUrl) {
+            log("خطأ: يرجى تعبئة جميع الحقول المطلوبة!");
+            return;
+        }
+
+        log("جاري إرسال أمر التشغيل إلى الخادم...");
+        const response = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/actions/workflows/stream.yml/dispatches`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `token ${token}`,
+                'Accept': 'application/vnd.github.v3+json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                ref: 'main',
+                inputs: {
+                    kick_channel: channel,
+                    stream_url: streamUrl
+                }
+            })
+        });
+
+        if(response.ok) {
+            log("تم إرسال أمر التشغيل بنجاح! البث بدأ الآن 🚀");
+            setLiveStatus(true);
+        } else {
+            log("فشل الإرسال! تأكد من صحة التوكن.");
+        }
+    }
+
+    async function stopStream() {
+        const token = document.getElementById('token').value || localStorage.getItem('gh_token');
+        if(!token) {
+            log("خطأ: يرجى إدخال التوكن لإيقاف البث.");
+            return;
+        }
+
+        log("جاري البحث عن المهام النشطة وإيقافها...");
+        const runsRes = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/actions/runs?status=in_progress`, {
+            headers: { 'Authorization': `token ${token}` }
+        });
+        const data = await runsRes.json();
+        
+        if(data.workflow_runs && data.workflow_runs.length > 0) {
+            for(let run of data.workflow_runs) {
+                await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/actions/runs/${run.id}/cancel`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `token ${token}` }
+                });
+            }
+            log("تم إيقاف البث وجميع المهام بنجاح 🛑");
+            setLiveStatus(false);
+        } else {
+            log("لا توجد مهام بث تعمل حالياً.");
+            setLiveStatus(false);
+        }
+    }
+</script>
+
 </body>
 </html>
