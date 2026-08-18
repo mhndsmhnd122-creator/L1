@@ -1,14 +1,14 @@
-name: Kick Stream Relay
+name: Stream Relay
 
 on:
   workflow_dispatch:
     inputs:
-      kick_user:
-        description: 'Kick Username'
+      kick_channel:
+        description: 'Kick Channel Name'
         required: true
-        default: 'OSAMAH'
-      stream_key:
-        description: 'Stream Key (YouTube/Restream)'
+        type: string
+      stream_url:
+        description: 'Stream URL and Key'
         required: true
         type: string
 
@@ -17,17 +17,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      - name: Install Streamlink and FFmpeg
+      - name: Set up FFmpeg
         run: |
           sudo apt-get update
-          sudo apt-get install -y ffmpeg python3-pip
-          pip3 install streamlink
+          sudo apt-get install -y ffmpeg
 
       - name: Start Broadcasting with FFmpeg
         run: |
-          echo "Starting stream relay for ${{ github.event.inputs.kick_user }}..."
-          streamlink https://kick.com/${{ github.event.inputs.kick_user }} best -O | \
-          ffmpeg -i - -i TXT.gif -filter_complex "overlay=(W-w)/2:H-h-20" -c:v libx264 -preset veryfast -b:v 3000k -f flv "${{ github.event.inputs.stream_key }}"
+          # سحب رابط إمبيت كيك تلقائياً أو تشغيل البث المباشر مع دمج الـ GIF
+          KICK_URL="https://kick.com/api/v1/channels/${{ github.event.inputs.kick_channel }}"
+          PLAYBACK_URL=$(curl -s "$KICK_URL" | grep -o '"playback_url":"[^"]*' | grep -o 'https://[^"]*')
+          
+          if [ -z "$PLAYBACK_URL" ]; then
+            PLAYBACK_URL="https://stream.kick.com/livestream/${{ github.event.inputs.kick_channel }}/master.m3u8"
+          fi
 
+          # تشغيل FFmpeg مع دمج ملف TXT.gif كطبقة تراكب في الزاوية العليا اليمين
+          ffmpeg -re -i "$PLAYBACK_URL" -i TXT.gif \
+          -filter_complex "[0:v][1:v]overlay=W-w-10:10[out]" \
+          -map "[out]" -map 0:a \
+          -c:v libx264 -preset veryfast -b:v 3000k -maxrate 3000k -bufsize 6000k \
+          -pix_fmt yuv420p -g 60 -c:a aac -b:a 128k -ar 44100 \
+          -f flv "${{ github.event.inputs.stream_url }}"
