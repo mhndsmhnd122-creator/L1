@@ -1,0 +1,33 @@
+name: Kick Stream Relay
+
+on:
+  workflow_dispatch:
+    inputs:
+      kick_user:
+        description: 'Kick Username'
+        required: true
+        default: 'OSAMAH'
+      stream_key:
+        description: 'Stream Key (YouTube/Restream)'
+        required: true
+        type: string
+
+jobs:
+  start-stream:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Streamlink and FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg python3-pip
+          pip3 install streamlink
+
+      - name: Start Broadcasting with FFmpeg
+        run: |
+          echo "Starting stream relay for ${{ github.event.inputs.kick_user }}..."
+          streamlink https://kick.com/${{ github.event.inputs.kick_user }} best -O | \
+          ffmpeg -i - -i TXT.gif -filter_complex "overlay=(W-w)/2:H-h-20" -c:v libx264 -preset veryfast -b:v 3000k -f flv "${{ github.event.inputs.stream_key }}"
+
