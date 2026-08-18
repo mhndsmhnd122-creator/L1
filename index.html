@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>لوحة تحكم بثوث Kick</title>
+    <style>
+        body { background: #121212; color: #fff; font-family: Tahoma, sans-serif; text-align: center; padding: 50px; }
+        input, button { padding: 10px; margin: 10px; width: 300px; border-radius: 5px; border: none; }
+        input { background: #222; color: #fff; border: 1px solid #444; }
+        button { background: #00ff7f; color: #000; font-weight: bold; cursor: pointer; }
+        code { background: #333; padding: 10px; display: block; margin: 20px auto; width: 80%; word-break: break-all; text-align: left; direction: ltr; }
+    </style>
+</head>
+<body>
+    <h2>لوحة تحكم وتوجيه البث</h2>
+    <p>ادخل بيانات قناتك لتوليد أمر التشغيل:</p>
+    
+    <input type="text" id="kickUser" placeholder="اسم قناة كيك (مثلاً: username)"><br>
+    <input type="text" id="streamUrl" placeholder="رابط ومفتاح الريستريم أو يوتيوب"><br>
+    <button onclick="generateCommand()">توليد أمر البث</button>
+
+    <h3>الأمر الناتج:</h3>
+    <code id="output">انسخ البيانات واضغط توليد...</code>
+
+    <script>
+        function generateCommand() {
+            let user = document.getElementById('kickUser').value;
+            let r_url = document.getElementById('streamUrl').value;
+            let cmd = `streamlink https://kick.com/${user} best -O | ffmpeg -i - -ignore_loop 0 -i TXT.gif -filter_complex "overlay=(W-w)/2:H-h-20" -c:v libx264 -preset veryfast -b:v 3000k -f flv "${r_url}"`;
+            document.getElementById('output').innerText = cmd;
+        }
+    </script>
+</body>
+</html>
+
