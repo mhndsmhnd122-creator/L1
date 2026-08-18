@@ -4,32 +4,41 @@
     <meta charset="UTF-8">
     <title>لوحة تحكم بثوث Kick</title>
     <style>
-        body { background: #121212; color: #fff; font-family: Tahoma, sans-serif; text-align: center; padding: 50px; }
+        body { background: #121212; color: #FFF; font-family: Tahoma, sans-serif; text-align: center; padding: 20px; }
         input, button { padding: 10px; margin: 10px; width: 300px; border-radius: 5px; border: none; }
-        input { background: #222; color: #fff; border: 1px solid #444; }
-        button { background: #00ff7f; color: #000; font-weight: bold; cursor: pointer; }
-        code { background: #333; padding: 10px; display: block; margin: 20px auto; width: 80%; word-break: break-all; text-align: left; direction: ltr; }
+        input { background: #222; color: #FFF; border: 1px solid #444; }
+        button { background: #00FF7F; color: #000; font-weight: bold; cursor: pointer; }
+        code { background: #333; padding: 10px; display: block; margin: 20px auto; width: 80%; word-break: break-all; text-align: left; }
     </style>
 </head>
 <body>
     <h2>لوحة تحكم وتوجيه البث</h2>
-    <p>ادخل بيانات قناتك لتوليد أمر التشغيل:</p>
+    <p>ادخل بيانات قناتك لبدء البث عبر سيرفرات GitHub تلقائياً</p>
     
-    <input type="text" id="kickUser" placeholder="اسم قناة كيك (مثلاً: username)"><br>
-    <input type="text" id="streamUrl" placeholder="رابط ومفتاح الريستريم أو يوتيوب"><br>
-    <button onclick="generateCommand()">توليد أمر البث</button>
+    <input type="text" id="kickUser" placeholder="اسم قناة كيك (مثال: OSAMAH)"><br>
+    <input type="text" id="streamKey" placeholder="رابط ومفتاح الريستريم أو يوتيوب"><br>
+    <button onclick="triggerStream()">ابدأ البث الآن</button>
 
-    <h3>الأمر الناتج:</h3>
-    <code id="output">انسخ البيانات واضغط توليد...</code>
+    <h3>مخرجات البث (Logs):</h3>
+    <code id="output">جاهز لتشغيل البث...</code>
 
     <script>
-        function generateCommand() {
-            let user = document.getElementById('kickUser').value;
-            let r_url = document.getElementById('streamUrl').value;
-            let cmd = `streamlink https://kick.com/${user} best -O | ffmpeg -i - -ignore_loop 0 -i TXT.gif -filter_complex "overlay=(W-w)/2:H-h-20" -c:v libx264 -preset veryfast -b:v 3000k -f flv "${r_url}"`;
-            document.getElementById('output').innerText = cmd;
+        async function triggerStream() {
+            const user = document.getElementById('kickUser').value;
+            const key = document.getElementById('streamKey').value;
+            const output = document.getElementById('output');
+
+            if (!user || !key) {
+                alert('الرجاء تعبئة جميع الحقول!');
+                return;
+            }
+
+            output.innerText = "جاري إرسال طلب تشغيل البث إلى السيرفر...";
+
+            // ملاحظة: لتشغيل هذه الخطوة أوتوماتيكياً من الواجهة، ستحتاج توكن GitHub (Personal Access Token) مع صلاحية repo
+            // يمكنك وضعه هنا أو تشغيله مباشرة من تبويب Actions في المستودع.
+            alert("تم إعداد الكود بنجاح. لتشغيل البث مباشرة، توجه إلى تبويب Actions في مستودعك واضغط Run workflow بالبيانات التي أدخلتها.");
         }
     </script>
 </body>
 </html>
-
